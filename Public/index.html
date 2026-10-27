@@ -10,12 +10,15 @@
 <body>
 <header>
     <h1>AgriConnect</h1>
-    <nav>
-        <a href="#home">Home</a>
-        <a href="#produce">Produce</a>
-        <a href="#register">Register</a>
-        <a href="#contact">Contact</a>
-    </nav>
+
+<nav>
+    <a href="#home">Home</a>
+    <a href="#produce">Produce</a>
+    <a href="#register">Register</a>
+    <a href="#login">Login</a>
+    <a href="#contact">Contact</a>
+</nav>
+
 </header>
 
 <section id="home" class="hero">
@@ -64,9 +67,29 @@
     <p id="message" role="status"></p>
 </form>
 
-<script src="script.js"></script>
+</section>
 
-    <p id="message"></p>
+<section id="login">
+    <h2>Login to AgriConnect</h2>
+
+    <form id="loginForm">
+        <input
+            type="email"
+            id="loginEmail"
+            placeholder="Email address"
+            required
+        >
+
+        <input
+            type="password"
+            id="loginPassword"
+            placeholder="Password"
+            required
+        >
+
+        <button type="submit">Login</button>
+        <p id="loginMessage" role="status"></p>
+    </form>
 </section>
 
 <section id="produce">
@@ -74,56 +97,20 @@
     <input id="search" type="search"
            placeholder="Search produce...">
 
-    <div class="products">
-
-        <div class="product">
-            <img
-                src="https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=700&q=80"
-                alt="Fresh red tomatoes"
-                loading="lazy"
-            >
-            <h3>Fresh Tomatoes</h3>
-            <p>Fresh, quality tomatoes from local farmers.</p>
-            <p class="price">KSh 100 per kg</p>
-            <button type="button">Add to Cart</button>
-        </div>
-
-        <div class="product">
-            <img
-                src="https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=700&q=80"
-                alt="Fresh maize"
-                loading="lazy"
-            >
-            <h3>Fresh Maize</h3>
-            <p>Quality maize sourced from local farms.</p>
-            <p class="price">KSh 80 per kg</p>
-            <button type="button">Add to Cart</button>
-        </div>
-
-        <div class="product">
-            <img
-                src="https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&w=700&q=80"
-                alt="Fresh green vegetables"
-                loading="lazy"
-            >
-            <h3>Fresh Vegetables</h3>
-            <p>Nutritious vegetables for everyday meals.</p>
-            <p class="price">KSh 120 per bunch</p>
-            <button type="button">Add to Cart</button>
-        </div>
-
+    <p id="catalogueMessage" role="status">Loading available farmer listings...</p>
+    <div class="products" id="products">
     </div>
 </section>
 
 <section id="cart">
     <h2>Shopping Cart</h2>
     <p>Items selected: <span id="count">0</span></p>
-    <button id="checkout" type="button">
-        Place Order
-    </button>
-    <p id="orderMessage"></p>
+    <ul id="cartItems"></ul>
+    <p id="cartTotal">Total: KSh 0.00</p>
+    <button id="checkout" type="button">Place Order</button>
+    <p id="orderMessage" role="status"></p>
 </section>
-
+<section id="dashboard" hidden></section>
 <footer id="contact">
     <p>Contact AgriConnect | © 2026</p>
 </footer>

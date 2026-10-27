@@ -73,7 +73,7 @@ section h2 {
     background:
         linear-gradient(rgba(0, 45, 10, 0.65),
                         rgba(0, 45, 10, 0.65)),
-        url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=85");
+        url("https://tse4.mm.bing.net/th/id/OIP.0urjvNKvsiLnMryaAEH_iwHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -191,6 +191,53 @@ textarea:focus {
 .product button,
 .product .button {
     margin: 12px 18px 20px;
+}
+
+#dashboard form {
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+#dashboard > p,
+#farmerProduce p,
+#farmerOrders p {
+    margin: 12px 0;
+}
+
+#farmerProduce,
+#farmerOrders {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+#cartItems {
+    list-style: none;
+    max-width: 800px;
+    margin: 15px auto;
+}
+
+#cartItems li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid #c5d3c3;
+}
+
+#cartItems li span {
+    flex: 1;
+}
+
+#cartItems button {
+    padding: 6px 12px;
+}
+
+#cartTotal {
+    max-width: 800px;
+    margin: 15px auto;
+    font-weight: bold;
+    text-align: right;
 }
 
 /* ===== OTHER IMAGES ===== */

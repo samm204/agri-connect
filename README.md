@@ -9,7 +9,8 @@ AgriConnect is a web application designed to connect farmers with customers by m
 
 - **Product Listing:** Display available agricultural products.
 - **Product Search:** Help users find specific products.
-- **Shopping Cart:** Allow users to add products to their cart.
+- **Shopping Cart and Orders:** Buyers can place orders for available farmer listings. Payment and delivery are arranged directly with the farmer; no online payment is processed.
+- **Farmer Listings:** Farmers can add produce and review their listings and incoming orders.
 - **User Registration:** Support user account creation.
 - **Responsive Design:** Provide a user-friendly interface across different screen sizes.
 - **Backend Integration:** Connect the frontend to the server and database.
@@ -26,18 +27,16 @@ AgriConnect is a web application designed to connect farmers with customers by m
 ## 📁 Project Structure
 
 ```text
-AgriConnect/
-├── index.html
-├── style.css
-├── script.js
-├── Agriconnect-backend/
-│   ├── server.js
-│   ├── package.json
-│   └── ...
-└── README.md
+Agriconnect-backend/
+├── Public/
+│   ├── index.html
+│   ├── script.js
+│   └── style.css
+├── database.js
+├── schema.sql
+├── server.js
+└── package.json
 ```
-
-*Note: Update the structure above to match your actual files and folders.*
 
 ## ⚙️ Installation and Setup
 
@@ -63,10 +62,9 @@ npm install
 ### 4. Configure the database
 
 - Start your MySQL or MariaDB server.
-- Create the required database.
-- Configure your database connection settings.
-- Create the tables required by the application.
-- Add sensitive configuration values to a `.env` file if your backend supports it.
+- Create the database named by `DB_NAME` (defaults to `agriconnect`).
+- Import `schema.sql` into that database. It creates the user, category, produce, order, and order-item tables and seeds example categories.
+- Configure `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and a private `JWT_SECRET` in `.env`. Never commit `.env`.
 
 ### 5. Start the backend server
 
@@ -76,9 +74,11 @@ npm start
 
 Use the start command defined in your `package.json`. If no start script exists, use the appropriate command for your backend entry file.
 
-### 6. Open the frontend
+### 6. Open the application
 
-Open `index.html` in your browser or use a local development server, depending on your project setup.
+Visit `http://localhost:3000` so the static frontend and `/api` requests use the same Express server. Do not open the HTML file directly from disk.
+
+Orders are saved with `Placed` status and reduce available produce stock. The farmer can see incoming orders and the buyer's email in their dashboard. Payment and delivery must be arranged outside the application.
 
 ## 🔐 Security
 
