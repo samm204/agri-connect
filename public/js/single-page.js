@@ -9,8 +9,7 @@ function renderHeader() {
   const nav = h('nav', { class: 'main', 'aria-label': 'Main' }, links.map(([id, label]) => sectionLink(id, label)));
   const right = h('div', { class: 'nav-right' });
   if (ME) {
-    right.append(sectionLink('orders', 'My orders'));
-    if (ME.role === 'farmer') right.append(sectionLink('farmer-dashboard', 'Farmer dashboard'));
+    if (ME.role !== 'admin') right.append(h('a', { href: 'dashboard.html' }, 'My dashboard'));
     if (ME.role === 'admin') right.append(sectionLink('admin-dashboard', 'Admin dashboard'));
     right.append(h('button', { class: 'btn small outline', type: 'button', onclick: logoutUser }, `Logout (${ME.full_name.split(' ')[0]})`));
   } else {
@@ -39,7 +38,6 @@ async function loadCategories() {
   const { categories } = await api('/api/categories');
   const select = byId('catalog-category');
   select.replaceChildren(h('option', { value: '' }, 'All categories'));
-  byId('listing-category').replaceChildren(...categories.map((c) => h('option', { value: c.category_id }, c.name)));
   select.append(...categories.map((c) => h('option', { value: c.category_id }, c.name)));
   byId('categories').replaceChildren(...categories.map((c) =>
     h('button', { class: 'category-card', type: 'button', 'data-category': c.category_id, 'aria-label': `Browse ${c.name}` },
@@ -190,7 +188,6 @@ function renderCart() {
       Cart.clear();
       renderHeader();
       renderCart();
-      await loadOrders();
       await showOrder(result.order_id, true);
       location.hash = 'order-receipt';
     } catch (e) {
@@ -241,23 +238,6 @@ async function showOrder(id, isNew = false) {
   } catch (e) { showMsg(box, 'err', e.status === 403 ? 'That order does not belong to you.' : e.message); }
 }
 
-async function loadOrders() {
-  const list = byId('order-list');
-  if (!ME || !['buyer', 'admin'].includes(ME.role)) {
-    list.replaceChildren(h('p', { class: 'muted' }, 'Log in with a buyer account to view your orders.'));
-    return;
-  }
-  try {
-    const { orders } = await api('/api/orders');
-    list.replaceChildren(...(orders.length ? orders.map((o) => h('div', { class: 'panel order-line' },
-      h('strong', {}, `Order AC-${String(o.order_id).padStart(5, '0')}`), ' ', h('span', { class: `status ${o.status}` }, o.status),
-      h('div', { class: 'muted' }, `${o.created_at} UTC · Total ${kes(o.total)}`),
-      h('ul', {}, o.items.map((item) => h('li', {}, `${item.quantity} ${item.unit} × ${item.name}`))),
-      h('button', { class: 'btn small', type: 'button', 'data-action': 'order', 'data-id': o.order_id }, 'View receipt')))
-      : [h('div', { class: 'panel' }, 'You have not placed any orders yet. ', sectionLink('catalog', 'Browse produce'))]));
-  } catch (e) { showMsg(list, 'err', e.message); }
-}
-
 function bindAuthForms() {
   const login = byId('login-form');
   login.addEventListener('submit', async (event) => {
@@ -273,8 +253,12 @@ function bindAuthForms() {
     try {
       ({ user: ME } = await api('/api/login', { method: 'POST', body: { email, password } }));
       renderHeader();
-      await refreshRoleViews();
-      location.hash = ME.role === 'farmer' ? 'farmer-dashboard' : ME.role === 'admin' ? 'admin-dashboard' : 'catalog';
+      if (ME.role === 'admin') {
+        await refreshRoleViews();
+        location.hash = 'admin-dashboard';
+      } else {
+        location.href = 'dashboard.html';
+      }
     } catch (e) { button.disabled = false; showMsg(byId('login-message'), 'err', e.message); }
   });
 
@@ -300,10 +284,8 @@ function bindAuthForms() {
       phone: value('phone'), location: value('location'), farm_name: value('farm_name'), bio: value('bio'),
     };
     try {
-      const result = await api('/api/register', { method: 'POST', body });
-      register.reset(); toggleFarmerFields();
-      showMsg(byId('register-message'), 'ok', result.message);
-      byId('register-message').append(sectionLink('login', ' Go to login'));
+      ({ user: ME } = await api('/api/register', { method: 'POST', body }));
+      location.href = 'dashboard.html';
     } catch (e) {
       showFieldErrors(register, e.fields);
       showMsg(byId('register-message'), 'err', e.message);
@@ -350,12 +332,9 @@ function bindCatalog() {
 
 async function refreshRoleViews() {
   renderHeader();
-  await loadOrders();
   renderCart();
-  if (ME && ME.role === 'farmer') await initFarmerDashboard();
-  else byId('farmer-message').replaceChildren(h('p', { class: 'muted' }, 'Log in with a farmer account to manage produce listings.'));
   if (ME && ME.role === 'admin') await initAdminDashboard();
-  else byId('admin-message').replaceChildren(h('p', { class: 'muted' }, 'Log in as an administrator to approve farmers and manage orders.'));
+  else byId('admin-message').replaceChildren(h('p', { class: 'muted' }, 'Log in as an administrator to manage users and orders.'));
 }
 
 async function logoutUser() {
@@ -366,47 +345,6 @@ async function logoutUser() {
   renderHeader();
   await refreshRoleViews();
   location.hash = 'home';
-}
-
-async function initFarmerDashboard() {
-  const msg = byId('farmer-message');
-  if (!ME || ME.role !== 'farmer') return;
-  if (!ME.approved) showMsg(msg, 'info', 'Your farmer account is awaiting administrator approval. You can prepare listings after approval.');
-  try {
-    const { categories } = await api('/api/categories');
-    byId('listing-category').replaceChildren(...categories.map((c) => h('option', { value: c.category_id }, c.name)));
-    await loadFarmerListings();
-    await loadFarmerOrders();
-  } catch (e) { showMsg(msg, 'err', e.message); }
-}
-
-async function loadFarmerListings() {
-  const { produce } = await api('/api/my/produce');
-  byId('farmer-listings').replaceChildren(...(produce.length ? produce.map((p) => h('tr', {},
-    h('td', {}, p.name, p.approved ? '' : h('span', { class: 'tag' }, 'hidden')),
-    h('td', {}, `${kes(p.price)} / ${p.unit}`), h('td', {}, p.quantity),
-    h('td', {}, h('div', { class: 'row' },
-      h('button', { class: 'btn small outline', type: 'button', onclick: () => editListing(p) }, 'Edit'),
-      h('button', { class: 'btn small danger', type: 'button', onclick: () => removeListing(p) }, 'Delete')))))
-    : [h('tr', {}, h('td', { colspan: 4 }, 'No listings yet.'))]));
-}
-
-function editListing(p) {
-  const form = byId('listing-form');
-  for (const key of ['name', 'category_id', 'price', 'unit', 'quantity', 'location', 'photo_url', 'description']) form.elements[key].value = p[key] ?? '';
-  form.elements.produce_id.value = p.produce_id;
-  byId('listing-form-title').textContent = `Edit: ${p.name}`;
-  byId('cancel-listing-edit').classList.remove('hidden');
-  form.scrollIntoView({ behavior: 'smooth' });
-}
-
-async function removeListing(p) {
-  if (!confirm(`Delete "${p.name}"?`)) return;
-  try {
-    const result = await api(`/api/produce/${p.produce_id}`, { method: 'DELETE' });
-    message('farmer-message', 'ok', result.message);
-    await loadFarmerListings();
-  } catch (e) { message('farmer-message', 'err', e.message); }
 }
 
 async function loadFarmerOrders() {
@@ -461,14 +399,14 @@ async function loadAdminDashboard() {
     api('/api/admin/stats'), api('/api/admin/users'), api('/api/orders'),
   ]);
   const tile = (label, value) => h('div', { class: 'panel stat' }, h('b', {}, value), label);
-  byId('admin-stats').replaceChildren(tile('Farmers', stats.farmers), tile('Pending approval', stats.pending_farmers),
+  byId('admin-stats').replaceChildren(tile('Farmers', stats.farmers),
     tile('Buyers', stats.buyers), tile('Live listings', stats.listings), tile('Orders', stats.orders), tile('Order value', kes(stats.revenue)));
   byId('admin-users').replaceChildren(...usersResult.users.map((user) => h('tr', {},
     h('td', {}, user.full_name), h('td', {}, user.email), h('td', {}, user.role),
-    h('td', {}, user.approved ? 'Approved' : 'Pending / suspended'),
+    h('td', {}, user.approved ? 'Active' : 'Suspended'),
     h('td', {}, user.role === 'admin' ? '—' : user.approved
       ? h('button', { class: 'btn small danger', type: 'button', onclick: () => setUserApproval(user, false) }, 'Suspend')
-      : h('button', { class: 'btn small', type: 'button', onclick: () => setUserApproval(user, true) }, 'Approve')))));
+      : h('button', { class: 'btn small', type: 'button', onclick: () => setUserApproval(user, true) }, 'Reactivate')))));
   const flow = ['Placed', 'Confirmed', 'Dispatched', 'Delivered'];
   byId('admin-orders').replaceChildren(...(ordersResult.orders.length ? ordersResult.orders.map((order) => {
     const next = flow[flow.indexOf(order.status) + 1];
@@ -503,7 +441,6 @@ async function startSinglePage() {
   bindAuthForms();
   bindContactForm();
   bindCatalog();
-  bindListingForm();
   try {
     await loadCategories();
   } catch (e) { showMsg(byId('categories'), 'err', e.message); }

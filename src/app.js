@@ -143,12 +143,13 @@ function createApp(db) {
     if (phone && !/^[0-9+\s-]{7,20}$/.test(phone)) fields.phone = 'Enter a valid phone number.';
     if (Object.keys(fields).length) throw new HttpError(400, 'Please correct the highlighted fields.', fields);
     if (q('SELECT 1 FROM users WHERE email = ?').get(email)) throw new HttpError(409, 'An account with that email already exists.', { email: 'Email already registered.' });
-    const approved = role === 'farmer' ? 0 : 1; // farmers wait for admin approval
     const r = q(`INSERT INTO users (full_name,email,password_hash,role,phone,location,farm_name,bio,approved)
                  VALUES (?,?,?,?,?,?,?,?,?)`).run(full_name, email, sec.hashPassword(b.password), role, phone || null,
       sec.cleanText(b.location, 80) || null, role === 'farmer' ? sec.cleanText(b.farm_name, 80) || null : null,
-      role === 'farmer' ? sec.cleanText(b.bio, 400) || null : null, approved);
-    return { status: 201, data: { message: role === 'farmer' ? 'Registered. An administrator must approve your farmer account before you can list produce.' : 'Registered. You can now log in.', user_id: Number(r.lastInsertRowid) } };
+      role === 'farmer' ? sec.cleanText(b.bio, 400) || null : null, 1);
+    const user = q('SELECT user_id,full_name,email,role,approved,location,phone,farm_name FROM users WHERE user_id = ?').get(Number(r.lastInsertRowid));
+    setSession(res, user.user_id);
+    return { status: 201, data: { message: 'Account created.', user: publicUser(user) } };
   });
 
   route('POST', '/api/login', async (req, res, ctx) => {
@@ -213,7 +214,7 @@ function createApp(db) {
 
   route('POST', '/api/produce', async (req, res, ctx) => {
     const u = requireUser(req, 'farmer');
-    if (!u.approved) throw new HttpError(403, 'Your farmer account is awaiting administrator approval.');
+    if (!u.approved) throw new HttpError(403, 'Your farmer account is suspended. Contact support for assistance.');
     const p = validateProduce(ctx.body);
     const r = q(`INSERT INTO produce (farmer_id,category_id,name,description,price,unit,quantity,location,photo_url)
                  VALUES (?,?,?,?,?,?,?,?,?)`).run(u.user_id, p.category_id, p.name, p.description, p.price, p.unit, p.quantity, p.location || u.location, p.photo_url);
@@ -360,7 +361,7 @@ function createApp(db) {
     const approved = ctx.body.approved === false ? 0 : 1;
     if (target.role === 'admin') throw new HttpError(400, 'Administrator accounts cannot be changed here.');
     q('UPDATE users SET approved = ? WHERE user_id = ?').run(approved, id);
-    return { message: approved ? 'Account approved.' : 'Account suspended.' };
+    return { message: approved ? 'Account activated.' : 'Account suspended.' };
   });
 
   route('GET', '/api/admin/stats', async (req) => {
@@ -368,7 +369,6 @@ function createApp(db) {
     const n = (sql) => q(sql).get().n;
     return {
       farmers: n("SELECT COUNT(*) n FROM users WHERE role='farmer'"),
-      pending_farmers: n("SELECT COUNT(*) n FROM users WHERE role='farmer' AND approved=0"),
       buyers: n("SELECT COUNT(*) n FROM users WHERE role='buyer'"),
       listings: n('SELECT COUNT(*) n FROM produce WHERE approved=1'),
       orders: n('SELECT COUNT(*) n FROM orders'),

@@ -96,8 +96,8 @@ function buildHeader(active) {
   const right = h('div', { class: 'nav-right' });
   right.append(h('a', { href: '#cart', class: active === 'cart' ? 'active' : '' }, 'Cart', h('span', { class: 'badge', id: 'cart-count' }, Cart.count())));
   if (ME) {
-    const dash = ME.role === 'farmer' ? ['farmer-dashboard', 'My Produce'] : ME.role === 'admin' ? ['admin-dashboard', 'Admin'] : ['orders', 'My Orders'];
-    right.append(h('a', { href: `#${dash[0]}` }, dash[1]));
+    const dash = ME.role === 'admin' ? ['index.html#admin-dashboard', 'Admin'] : ['dashboard.html', 'My dashboard'];
+    right.append(h('a', { href: dash[0] }, dash[1]));
     right.append(h('button', { class: 'btn small outline', type: 'button', id: 'logout-btn', onclick: logout }, `Logout (${ME.full_name.split(' ')[0]})`));
   } else {
     right.append(h('a', { href: '#login' }, 'Login'), h('a', { href: '#register' }, 'Register'));

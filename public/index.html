@@ -13,14 +13,14 @@
 <main id="main" class="container">
   <section id="home" class="hero">
     <h1>Fresh produce, straight from the farm</h1>
-    <p>AgriConnect links smallholder farmers directly with households, hotels, schools and exporters. Browse produce, meet farmers, place and track orders, and manage your farm all from this page.</p>
+    <p>AgriConnect links smallholder farmers directly with households, hotels, schools and exporters. Browse produce, meet farmers and place orders. Buyers and farmers get a dedicated dashboard after login.</p>
     <div class="row"><a class="btn accent" href="#catalog">Browse produce</a><a class="btn outline" href="#register">Join as a farmer</a></div>
   </section>
 
   <section aria-labelledby="how-heading">
     <h2 id="how-heading">How it works</h2>
     <div class="steps">
-      <article class="card"><h3>1. Farmers list</h3><p>Approved farmers publish produce with price, quantity and location.</p></article>
+      <article class="card"><h3>1. Farmers list</h3><p>Farmers can publish produce as soon as they create an account.</p></article>
       <article class="card"><h3>2. Buyers order</h3><p>Search, filter, add to cart and place an order in minutes.</p></article>
       <article class="card"><h3>3. Track delivery</h3><p>Follow your order from Placed to Delivered and print your receipt.</p></article>
     </div>
@@ -56,7 +56,7 @@
       <h3>Our mission</h3>
       <p>Give small farmers a fair, simple route to market, and give buyers dependable access to fresh, traceable produce.</p>
       <h3>How we work</h3>
-      <ul><li>Every farmer account is reviewed and approved by our administrators.</li><li>Buyers see the real price, unit and stock for each listing.</li><li>Each order moves through Placed, Confirmed, Dispatched and Delivered, and you get a printable receipt.</li></ul>
+      <ul><li>Farmers can list produce as soon as they create an account.</li><li>Buyers see the real price, unit and stock for each listing.</li><li>Each order moves through Placed, Confirmed, Dispatched and Delivered, and you get a printable receipt.</li></ul>
     </div>
   </section>
 
@@ -109,7 +109,7 @@
         <div id="register-farmer-fields" class="hidden">
           <label for="register-farm">Farm name</label><input id="register-farm" name="farm_name" maxlength="80">
           <label for="register-bio">About your farm</label><textarea id="register-bio" name="bio" maxlength="400"></textarea>
-          <p class="hint">Farmer accounts are approved by an administrator before you can list produce.</p>
+          <p class="hint">Your farmer dashboard is ready as soon as you register.</p>
         </div>
         <button class="btn" type="submit">Register</button>
       </form>
@@ -123,43 +123,8 @@
   </section>
 
   <section id="orders" class="section-title" aria-labelledby="orders-heading">
-    <h2 id="orders-heading">My orders</h2>
-    <div id="order-list" aria-live="polite"></div>
+    <h2 id="orders-heading">Order receipt</h2>
     <div id="order-receipt" class="receipt section-title" aria-live="polite"></div>
-  </section>
-
-  <section id="farmer-dashboard" class="section-title" aria-labelledby="farmer-dashboard-heading">
-    <h2 id="farmer-dashboard-heading">Farmer dashboard</h2>
-    <div id="farmer-message"></div>
-    <div class="two-col">
-      <div class="panel">
-        <h3 id="listing-form-title">Add produce</h3>
-        <form id="listing-form" novalidate>
-          <input type="hidden" name="produce_id">
-          <label for="listing-name">Name *</label><input id="listing-name" name="name" maxlength="80" required>
-          <div class="field-error" data-error-for="name" aria-live="polite"></div>
-          <label for="listing-category">Category *</label><select id="listing-category" name="category_id"></select>
-          <div class="field-error" data-error-for="category_id" aria-live="polite"></div>
-          <div class="row">
-            <div class="grow"><label for="listing-price">Price (KES) *</label><input id="listing-price" name="price" type="number" min="0.01" step="0.01" required></div>
-            <div class="grow"><label for="listing-unit">Unit</label><input id="listing-unit" name="unit" value="kg" maxlength="20"></div>
-          </div>
-          <div class="field-error" data-error-for="price" aria-live="polite"></div>
-          <label for="listing-quantity">Quantity in stock *</label><input id="listing-quantity" name="quantity" type="number" min="0" step="1" required>
-          <div class="field-error" data-error-for="quantity" aria-live="polite"></div>
-          <label for="listing-location">Location</label><input id="listing-location" name="location" maxlength="80">
-          <label for="listing-photo">Photo link (optional)</label><input id="listing-photo" name="photo_url" type="url" maxlength="300" placeholder="https://…">
-          <div class="field-error" data-error-for="photo_url" aria-live="polite"></div>
-          <label for="listing-description">Description</label><textarea id="listing-description" name="description" maxlength="500"></textarea>
-          <div class="row"><button class="btn" type="submit">Save listing</button><button class="btn outline hidden" type="button" id="cancel-listing-edit">Cancel edit</button></div>
-        </form>
-      </div>
-      <div>
-        <h3>Your listings</h3>
-        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead><tbody id="farmer-listings"></tbody></table></div>
-        <h3 class="section-title">Orders for your produce</h3><div id="farmer-orders"></div>
-      </div>
-    </div>
   </section>
 
   <section id="admin-dashboard" class="section-title" aria-labelledby="admin-dashboard-heading">

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Manage your AgriConnect buyer or farmer account.">
+<title>Dashboard | AgriConnect</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/common.js" defer></script>
+<script src="js/dashboard.js" defer></script>
+</head>
+<body>
+<main id="main" class="container">
+  <section class="section-title">
+    <h1 id="dashboard-title">Your dashboard</h1>
+    <p id="dashboard-welcome" class="muted">Loading your account…</p>
+    <div id="dashboard-message" aria-live="polite"></div>
+  </section>
+  <section id="buyer-dashboard" class="hidden section-title" aria-labelledby="buyer-heading">
+    <div class="row"><h2 id="buyer-heading">Your orders</h2><a class="btn accent" href="index.html#catalog">Browse produce</a></div>
+    <div id="buyer-orders" aria-live="polite"></div>
+  </section>
+  <section id="farmer-dashboard" class="hidden section-title" aria-labelledby="farmer-heading">
+    <h2 id="farmer-heading">Manage your farm</h2>
+    <div class="two-col">
+      <div class="panel">
+        <h3 id="listing-form-title">Add produce</h3>
+        <form id="listing-form" novalidate>
+          <input type="hidden" name="produce_id">
+          <label for="listing-name">Name *</label><input id="listing-name" name="name" maxlength="80" required>
+          <div class="field-error" data-error-for="name" aria-live="polite"></div>
+          <label for="listing-category">Category *</label><select id="listing-category" name="category_id" required></select>
+          <div class="field-error" data-error-for="category_id" aria-live="polite"></div>
+          <div class="row">
+            <div class="grow"><label for="listing-price">Price (KES) *</label><input id="listing-price" name="price" type="number" min="0.01" step="0.01" required></div>
+            <div class="grow"><label for="listing-unit">Unit</label><input id="listing-unit" name="unit" value="kg" maxlength="20"></div>
+          </div>
+          <div class="field-error" data-error-for="price" aria-live="polite"></div>
+          <label for="listing-quantity">Quantity in stock *</label><input id="listing-quantity" name="quantity" type="number" min="0" step="1" required>
+          <div class="field-error" data-error-for="quantity" aria-live="polite"></div>
+          <label for="listing-location">Location</label><input id="listing-location" name="location" maxlength="80">
+          <label for="listing-photo">Photo link (optional)</label><input id="listing-photo" name="photo_url" type="url" maxlength="300" placeholder="https://…">
+          <div class="field-error" data-error-for="photo_url" aria-live="polite"></div>
+          <label for="listing-description">Description</label><textarea id="listing-description" name="description" maxlength="500"></textarea>
+          <div class="row"><button class="btn" type="submit">Save listing</button><button class="btn outline hidden" type="button" id="cancel-listing-edit">Cancel edit</button></div>
+        </form>
+      </div>
+      <div>
+        <h3>Your listings</h3>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead><tbody id="farmer-listings"></tbody></table></div>
+      </div>
+    </div>
+    <h3 class="section-title">Orders for your produce</h3>
+    <div id="farmer-orders" aria-live="polite"></div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="container foot-grid">
+    <div><strong>AgriConnect</strong><p>Connecting smallholder farmers directly with buyers.</p></div>
+    <div><strong>Quick links</strong><p><a href="index.html#catalog">Browse produce</a> · <a href="index.html#about">About us</a></p></div>
+    <div><strong>Contact</strong><p>info@agriconnect.co.ke · +254 700 000 000</p></div>
+  </div>
+  <div class="container muted">© 2026 AgriConnect. Academic project – Software Development Level 6.</div>
+</footer>
+</body>
+</html>

@@ -44,7 +44,9 @@ const record = (id, check, ok, detail = '') => { results.push({ id, check, ok, d
     await page.goto(`${base}/index.html#login`);
     await page.fill('#login-email', 'buyer@hotel.co.ke'); await page.fill('#login-password', 'Demo@1234');
     await page.click('#login-form button[type=submit]');
-    await page.waitForFunction(() => location.hash === '#catalog');
+    await page.waitForURL(/dashboard\.html/);
+    record(`UI-${vpName}-buyer-dashboard-redirect`, 'buyer login opens the buyer dashboard', /dashboard\.html$/.test(new URL(page.url()).pathname));
+    await page.goto(`${base}/index.html#catalog`);
     await page.locator('#catalog-results [data-action=product]').first().click();
     await page.locator('#product-detail input[type=number]').fill('3');
     await page.locator('#product-detail button.accent').click();
@@ -81,9 +83,31 @@ const record = (id, check, ok, detail = '') => { results.push({ id, check, ok, d
   await farmerPage.goto(`${base}/index.html#login`);
   await farmerPage.fill('#login-email', 'wanjiru@farm.co.ke'); await farmerPage.fill('#login-password', 'Demo@1234');
   await farmerPage.click('#login-form button[type=submit]');
+  await farmerPage.waitForURL(/dashboard\.html/);
   await farmerPage.waitForSelector('#farmer-listings tr');
   record('UI-farmer', 'farmer dashboard lists own produce', (await farmerPage.locator('#farmer-listings tr').count()) >= 4);
   await farmerPage.screenshot({ path: path.join(OUT, 'desktop_dashboard.png'), fullPage: true });
+
+  const registrationPage = await (await browser.newContext({ viewport: VIEWPORTS.desktop })).newPage();
+  await registrationPage.goto(`${base}/index.html#register`);
+  await registrationPage.selectOption('#register-role', 'farmer');
+  await registrationPage.fill('#register-name', 'New Dashboard Farmer');
+  await registrationPage.fill('#register-email', `farmer-${Date.now()}@example.com`);
+  await registrationPage.fill('#register-password', 'RegFarm123');
+  await registrationPage.fill('#register-farm', 'Instant Farm');
+  await registrationPage.click('#register-form button[type=submit]');
+  await registrationPage.waitForURL(/dashboard\.html/);
+  await registrationPage.waitForSelector('#farmer-listings tr');
+  record('UI-farmer-registration-redirect', 'farmer registration opens an active farmer dashboard without approval messaging',
+    /Farmer dashboard/.test(await registrationPage.locator('#dashboard-title').textContent())
+      && !/awaiting administrator approval/i.test(await registrationPage.locator('body').textContent()));
+  await registrationPage.fill('#listing-name', 'Fresh Spinach');
+  await registrationPage.fill('#listing-price', '45');
+  await registrationPage.fill('#listing-quantity', '20');
+  await registrationPage.click('#listing-form button[type=submit]');
+  await registrationPage.waitForFunction(() => document.querySelector('#farmer-listings').textContent.includes('Fresh Spinach'));
+  record('UI-farmer-registration-listing', 'newly registered farmer can publish a listing immediately',
+    (await registrationPage.locator('#farmer-listings').textContent()).includes('Fresh Spinach'));
 
   await browser.close(); server.close();
   fs.writeFileSync(path.join(OUT, 'ui-results.json'), JSON.stringify(results, null, 2));

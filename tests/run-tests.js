@@ -46,7 +46,7 @@ const as = async (email, pw) => { const c = new Client(); const r = await c.logi
 const ADMIN = ['admin@agriconnect.co.ke', 'Admin@1234'];
 const FARMER = ['wanjiru@farm.co.ke', 'Demo@1234'];
 const FARMER2 = ['otieno@farm.co.ke', 'Demo@1234'];
-const PENDING = ['chebet@farm.co.ke', 'Demo@1234'];
+const FARMER3 = ['chebet@farm.co.ke', 'Demo@1234'];
 const BUYER = ['buyer@hotel.co.ke', 'Demo@1234'];
 const validReg = (o = {}) => ({ full_name: 'Test User', email: `u${Math.random().toString(36).slice(2, 9)}@example.com`, password: 'Secret123', role: 'buyer', ...o });
 const stock = (id) => db.prepare('SELECT quantity FROM produce WHERE produce_id=?').get(id).quantity;
@@ -55,17 +55,20 @@ const stock = (id) => db.prepare('SELECT quantity FROM produce WHERE produce_id=
 // FUNCTIONAL: REGISTRATION / LOGIN
 // =====================================================================
 const R = 'Registration & Login';
-T('REG-01', R, 'functional', 'Register a valid buyer', '201 Created; account usable immediately', async () => {
+T('REG-01', R, 'functional', 'Register a valid buyer', '201 Created; session established immediately', async () => {
   const c = new Client(); const e = validReg(); const r = await c.post('/api/register', e);
-  const l = await new Client().login(e.email, e.password);
-  return ok(r.status === 201 && l.status === 200, `register=${r.status}, login=${l.status}`);
+  const me = await c.get('/api/me');
+  return ok(r.status === 201 && r.data.user.role === 'buyer' && me.data.user.email === e.email,
+    `register=${r.status}, role=${r.data.user && r.data.user.role}, session=${me.data.user && me.data.user.email}`);
 });
-T('REG-02', R, 'functional', 'Register a valid farmer', '201 Created; farmer is pending approval and cannot list produce', async () => {
-  const e = validReg({ role: 'farmer', farm_name: 'Test Farm' }); await new Client().post('/api/register', e);
-  const c = await as(e.email, e.password);
+T('REG-02', R, 'functional', 'Register a valid farmer', '201 Created; farmer session established and can list produce immediately', async () => {
+  const c = new Client(); const e = validReg({ role: 'farmer', farm_name: 'Test Farm' });
+  const registered = await c.post('/api/register', e);
   const row = db.prepare('SELECT approved FROM users WHERE email=?').get(e.email);
   const r = await c.post('/api/produce', { name: 'Spinach', price: 50, quantity: 10, category_id: 1 });
-  return ok(row.approved === 0 && r.status === 403, `approved=${row.approved}, create produce=${r.status}`);
+  const me = await c.get('/api/me');
+  return ok(registered.status === 201 && row.approved === 1 && me.data.user.role === 'farmer' && r.status === 201,
+    `register=${registered.status}, approved=${row.approved}, role=${me.data.user.role}, create produce=${r.status}`);
 });
 T('REG-03', R, 'functional', 'Duplicate email is rejected', '409 Conflict', async () => {
   const r = await new Client().post('/api/register', validReg({ email: BUYER[0] }));
@@ -216,7 +219,7 @@ T('CAT-16', C, 'functional', 'Buyer cannot create produce', '403', async () => {
 T('CAT-17', C, 'functional', 'Anonymous user cannot create produce', '401', async () => {
   const r = await new Client().post('/api/produce', { name: 'X', price: 1, quantity: 1, category_id: 1 }); return ok(r.status === 401, `status=${r.status}`);
 }, 'negative');
-T('CAT-18', C, 'functional', 'Suspended farmer\'s produce disappears from catalogue', 'Listings hidden while suspended, visible again after re-approval', async () => {
+T('CAT-18', C, 'functional', 'Suspended farmer\'s produce disappears from catalogue', 'Listings hidden while suspended and visible after reactivation', async () => {
   const a = await as(...ADMIN); const before = (await new Client().get('/api/produce?search=Maize')).data.produce.length;
   await a.put('/api/admin/users/3/approve', { approved: false });
   const during = (await new Client().get('/api/produce?search=Maize')).data.produce.length;
@@ -224,12 +227,10 @@ T('CAT-18', C, 'functional', 'Suspended farmer\'s produce disappears from catalo
   const after = (await new Client().get('/api/produce?search=Maize')).data.produce.length;
   return ok(before === 1 && during === 0 && after === 1, `before=${before}, suspended=${during}, restored=${after}`);
 });
-T('CAT-19', C, 'functional', 'Admin approves a pending farmer, who can then list produce', '403 before approval, 201 after', async () => {
-  const a = await as(...ADMIN); const f = await as(...PENDING);
-  const before = (await f.post('/api/produce', { name: 'Beans', price: 120, quantity: 40, category_id: 4 })).status;
-  await a.put('/api/admin/users/4/approve', { approved: true });
-  const after = (await f.post('/api/produce', { name: 'Beans', price: 120, quantity: 40, category_id: 4 })).status;
-  return ok(before === 403 && after === 201, `before=${before}, after=${after}`);
+T('CAT-19', C, 'functional', 'Existing farmer account can list produce without approval', '201', async () => {
+  const f = await as(...FARMER3);
+  const result = await f.post('/api/produce', { name: 'Beans', price: 120, quantity: 40, category_id: 4 });
+  return ok(result.status === 201, `status=${result.status}`);
 });
 
 // =====================================================================
@@ -404,8 +405,8 @@ T('SEC-19', S, 'security', 'Admin endpoints reject buyers, farmers and anonymous
   const b = (await (await as(...BUYER)).get('/api/admin/users')).status, f = (await (await as(...FARMER)).get('/api/admin/stats')).status, a = (await new Client().get('/api/admin/users')).status;
   return ok(b === 403 && f === 403 && a === 401, `buyer=${b}, farmer=${f}, anonymous=${a}`);
 }, 'negative');
-T('SEC-20', S, 'security', 'Farmer cannot self-approve through the admin API', '403', async () => {
-  const r = await (await as(...PENDING)).put('/api/admin/users/4/approve', { approved: true }); return ok(r.status === 403, `status=${r.status}`);
+T('SEC-20', S, 'security', 'Farmer cannot reactivate accounts through the admin API', '403', async () => {
+  const r = await (await as(...FARMER3)).put('/api/admin/users/4/approve', { approved: true }); return ok(r.status === 403, `status=${r.status}`);
 }, 'negative');
 T('SEC-21', S, 'security', 'CSRF defence: state-changing call without the custom header', '403', async () => {
   const c = await as(...BUYER); const r = await c.call('POST', '/api/orders', { delivery_address: addr, items: [{ produce_id: 1, quantity: 1 }] }, { 'X-Requested-With': '' });

@@ -1,6 +1,6 @@
 # AgriConnect – Agribusiness Web Application
 
-AgriConnect connects smallholder farmers directly with buyers (households, hotels, schools and exporters). Farmers list produce; buyers search, add to a cart and place orders; an administrator approves farmer accounts and moves orders through their lifecycle (Placed → Confirmed → Dispatched → Delivered). Each order has a printable/PDF receipt.
+AgriConnect connects smallholder farmers directly with buyers (households, hotels, schools and exporters). Farmers can list produce as soon as they register; buyers search, add to a cart and place orders. Buyers and farmers are redirected to role-specific dashboards after login or registration. Administrators can suspend accounts and move orders through their lifecycle (Placed → Confirmed → Dispatched → Delivered). Each order has a printable/PDF receipt.
 
 Built for the TVET CDACC *Create Web Applications* practical assessment (Software Development Level 5/6).
 
@@ -43,10 +43,12 @@ On first start the database and demo data are created automatically.
 | Administrator | admin@agriconnect.co.ke | `Admin@1234` locally (or your `ADMIN_PASSWORD`) |
 | Farmer (approved) | wanjiru@farm.co.ke | `Demo@1234` |
 | Farmer (approved) | otieno@farm.co.ke | `Demo@1234` |
-| Farmer (pending approval) | chebet@farm.co.ke | `Demo@1234` |
+| Farmer | chebet@farm.co.ke | `Demo@1234` |
 | Buyer | buyer@hotel.co.ke | `Demo@1234` |
 
 The demo accounts are sample data for the assessment only.
+
+Farmers are activated immediately at registration. On first startup, legacy inactive farmer accounts are reactivated because the old database did not distinguish pending approvals from suspensions. Administrator suspensions applied after that migration persist across restarts.
 
 ## Setup – deploy (Render, free tier)
 

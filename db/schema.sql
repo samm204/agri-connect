@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   location       TEXT,
   farm_name      TEXT,                                   -- farmers only
   bio            TEXT,                                   -- farmer profile text
-  approved       INTEGER NOT NULL DEFAULT 0,             -- farmers need admin approval
+  approved       INTEGER NOT NULL DEFAULT 1,             -- admins may suspend non-admin accounts
   created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 

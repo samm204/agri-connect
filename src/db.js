@@ -23,14 +23,33 @@ function open(file = DB_FILE) {
     user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     expires_at INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS app_migrations (
+    migration TEXT PRIMARY KEY,
+    applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   CREATE TABLE IF NOT EXISTS messages (
     message_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL, email TEXT NOT NULL, body TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );`);
   ensureCategories(db);
+  activateExistingFarmers(db);
   seed(db);
   return db;
+}
+
+function activateExistingFarmers(db) {
+  const migration = 'activate-farmers-without-approval';
+  if (db.prepare('SELECT 1 FROM app_migrations WHERE migration = ?').get(migration)) return;
+  db.exec('BEGIN');
+  try {
+    db.prepare("UPDATE users SET approved = 1 WHERE role = 'farmer' AND approved = 0").run();
+    db.prepare('INSERT INTO app_migrations (migration) VALUES (?)').run(migration);
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
 }
 
 function ensureCategories(db) {
@@ -72,7 +91,7 @@ function seed(db) {
   addUser.run('Otieno Odhiambo', 'otieno@farm.co.ke', hashPassword(demoPw), 'farmer', '0722000222', 'Kisumu', 'Lakeview Farm',
     'Fruit, cereal and poultry farmer near Lake Victoria.', 1);
   addUser.run('Chebet Rotich', 'chebet@farm.co.ke', hashPassword(demoPw), 'farmer', '0733000333', 'Nakuru', 'Rift Valley Dairy and Crops',
-    'Mixed farm: maize, beans and potatoes.', 0); // pending admin approval
+    'Mixed farm: maize, beans and potatoes.', 1);
   addUser.run('Grace Hotel Supplies', 'buyer@hotel.co.ke', hashPassword(demoPw), 'buyer', '0744000444', 'Nairobi', null, null, 1);
 
   const categoryId = (name) => db.prepare('SELECT category_id FROM categories WHERE name = ?').get(name).category_id;
