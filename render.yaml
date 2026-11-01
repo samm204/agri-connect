@@ -1,0 +1,18 @@
+# Render Blueprint: infrastructure as code for the AgriConnect web service.
+# Use: Render dashboard -> New -> Blueprint -> select this repository.
+services:
+  - type: web
+    name: agriconnect
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true            # redeploy on every push to the connected branch
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: ADMIN_PASSWORD     # secret: enter the value in the dashboard, never in Git
+        sync: false

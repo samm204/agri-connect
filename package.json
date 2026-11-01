@@ -1,18 +1,16 @@
-
 {
-  "name": "agriconnect-backend",
+  "name": "agriconnect",
   "version": "1.0.0",
-  "description": "Backend for the AgriConnect agribusiness web application",
+  "description": "Agribusiness web application connecting smallholder farmers directly with buyers",
   "main": "server.js",
+  "private": true,
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "test": "node tests/run-tests.js",
+    "backup": "node scripts/backup-db.js"
   },
-  "dependencies": {
-    "bcryptjs": "^3.0.0",
-    "dotenv": "^16.4.0",
-    "express": "^5.0.0",
-    "mysql2": "^3.0.0",
-    "jsonwebtoken": "^9.0.0"
-  }
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "license": "MIT"
 }

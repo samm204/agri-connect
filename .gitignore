@@ -1,4 +1,17 @@
+# dependencies and build output
 node_modules/
+# local database files (contain user data)
+db/*.sqlite
+db/*.sqlite-shm
+db/*.sqlite-wal
+# secrets and environment files
 .env
+.env.*
+!.env.example
+# logs and OS/editor files
+*.log
 .DS_Store
-npm-debug.log*
+.vscode/
+.idea/
+# database backups (contain user data)
+backups/
